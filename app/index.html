@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vice Cover Studio — GTA-style cover art maker</title>
+<meta name="description" content="Turn your photo and a caption into GTA-style cover art. Multi-panel posters, Vice City sunset grades, exported as PNG. Runs offline; photos never leave your machine.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">VC</span> VICE COVER STUDIO</div>
+  <div class="topbar-note">100% offline &mdash; your photos never leave this machine</div>
+</header>
+
+<main class="studio">
+  <aside class="controls" aria-label="Cover controls">
+    <section class="group">
+      <h2>Photos</h2>
+      <div id="panel-strip" class="panel-strip" role="group" aria-label="Panels"></div>
+      <div class="row">
+        <button id="upload-one" type="button" class="btn">Upload photo</button>
+        <button id="upload-all" type="button" class="btn ghost">Fill all panels</button>
+      </div>
+      <p class="hint">Or try a sample in the selected panel:</p>
+      <div id="sample-row" class="sample-row"></div>
+    </section>
+
+    <section class="group">
+      <h2>Selected panel &mdash; <span id="selected-label">Hero panel</span></h2>
+      <label class="slider-row">Zoom
+        <input id="zoom" type="range" min="100" max="250" value="100">
+        <span id="zoom-value">100%</span>
+      </label>
+      <button id="center-photo" type="button" class="btn ghost small">Centre photo</button>
+      <p class="hint">Drag the photo on the preview to reposition it. Click a panel to select it.</p>
+    </section>
+
+    <section class="group">
+      <h2>Layout</h2>
+      <div id="layout-choices" class="choices"></div>
+    </section>
+
+    <section class="group">
+      <h2>Colour grade</h2>
+      <div id="grade-choices" class="choices"></div>
+    </section>
+
+    <section class="group">
+      <h2>Caption</h2>
+      <label class="field">Main caption
+        <input id="caption-input" type="text" value="SUNSET HEIST" maxlength="40" autocomplete="off">
+      </label>
+      <label class="field">Tagline
+        <input id="tagline-input" type="text" value="LEONIDA" maxlength="30" autocomplete="off">
+      </label>
+      <div id="color-choices" class="choices"></div>
+      <label class="slider-row">Size
+        <input id="caption-size" type="range" min="70" max="140" value="100">
+        <span id="caption-size-value">100%</span>
+      </label>
+      <label class="field">Position
+        <select id="caption-position">
+          <option value="bottom" selected>Bottom</option>
+          <option value="top">Top</option>
+        </select>
+      </label>
+      <label class="check"><input id="tilt-toggle" type="checkbox" checked> Slight tilt</label>
+      <label class="check"><input id="stamp-toggle" type="checkbox" checked> &ldquo;Vice City 2026&rdquo; stamp</label>
+    </section>
+
+    <section class="group export">
+      <h2>Export PNG</h2>
+      <div id="size-choices" class="size-choices"></div>
+      <button id="export-btn" type="button" class="btn primary big">Export PNG</button>
+      <p id="status" class="status" role="status">Ready.</p>
+    </section>
+  </aside>
+
+  <section class="stage" aria-label="Cover preview">
+    <canvas id="preview" width="720" height="720"></canvas>
+    <p class="stage-hint">Live preview &mdash; what you see is the PNG you get.</p>
+  </section>
+</main>
+
+<input id="file-input" type="file" accept="image/*" hidden>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
