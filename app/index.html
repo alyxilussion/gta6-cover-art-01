@@ -3,88 +3,107 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vice Cover Studio — GTA-style cover art maker</title>
-<meta name="description" content="Turn your photo and a caption into GTA-style cover art. Multi-panel posters, Vice City sunset grades, exported as PNG. Runs offline; photos never leave your machine.">
+<title>Sunset Heat — Leonida Cover Studio</title>
+<meta name="description" content="Turn your photos into GTA 6-style cover art: multi-panel posters, Vice City sunset grades, bold caption lettering. Exports PNG to share.">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header class="topbar">
-  <div class="brand"><span class="brand-mark">VC</span> VICE COVER STUDIO</div>
-  <div class="topbar-note">100% offline &mdash; your photos never leave this machine</div>
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">★</span>
+    <div>
+      <h1>Sunset Heat</h1>
+      <p>Leonida Cover Studio</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button type="button" id="shuffle-btn" class="btn ghost">Shuffle</button>
+    <button type="button" id="auto-btn" class="btn ghost">Auto-cover</button>
+    <button type="button" id="export-btn" class="btn primary">Export PNG</button>
+  </div>
 </header>
 
-<main class="studio">
-  <aside class="controls" aria-label="Cover controls">
-    <section class="group">
-      <h2>Photos</h2>
-      <div id="panel-strip" class="panel-strip" role="group" aria-label="Panels"></div>
+<div class="workbench">
+  <aside class="rail" aria-label="Cover controls">
+    <section class="rail-section">
+      <h2><span class="step">1</span> Photos</h2>
+      <p class="hint">Tap a photo to put it in the selected panel. Drag a photo from your computer onto the cover, or upload your own.</p>
+      <div id="photo-tray" class="tray" role="group" aria-label="Sample photos"></div>
       <div class="row">
-        <button id="upload-one" type="button" class="btn">Upload photo</button>
-        <button id="upload-all" type="button" class="btn ghost">Fill all panels</button>
+        <label class="btn small" for="upload-input">Upload photos</label>
+        <input type="file" id="upload-input" accept="image/*" multiple hidden>
+        <button type="button" id="fill-all-btn" class="btn small ghost">Fill all panels</button>
       </div>
-      <p class="hint">Or try a sample in the selected panel:</p>
-      <div id="sample-row" class="sample-row"></div>
     </section>
 
-    <section class="group">
-      <h2>Selected panel &mdash; <span id="selected-label">Hero panel</span></h2>
-      <label class="slider-row">Zoom
-        <input id="zoom" type="range" min="100" max="250" value="100">
-        <span id="zoom-value">100%</span>
-      </label>
-      <button id="center-photo" type="button" class="btn ghost small">Centre photo</button>
-      <p class="hint">Drag the photo on the preview to reposition it. Click a panel to select it.</p>
+    <section class="rail-section">
+      <h2><span class="step">2</span> Layout</h2>
+      <div id="layout-pick" class="pick-grid" role="group" aria-label="Cover layout"></div>
     </section>
 
-    <section class="group">
-      <h2>Layout</h2>
-      <div id="layout-choices" class="choices"></div>
+    <section class="rail-section">
+      <h2><span class="step">3</span> Grade &amp; effects</h2>
+      <div id="grade-pick" class="pick-grid swatches" role="group" aria-label="Colour grade"></div>
+      <fieldset class="fx">
+        <legend>Painterly effects</legend>
+        <label><input type="checkbox" id="fx-halftone"> Halftone dots</label>
+        <label><input type="checkbox" id="fx-grain"> Film grain</label>
+        <label><input type="checkbox" id="fx-vignette"> Vignette</label>
+        <label><input type="checkbox" id="fx-ink"> Ink edges</label>
+        <label><input type="checkbox" id="fx-flare"> Sun flare</label>
+      </fieldset>
     </section>
 
-    <section class="group">
-      <h2>Colour grade</h2>
-      <div id="grade-choices" class="choices"></div>
-    </section>
-
-    <section class="group">
-      <h2>Caption</h2>
-      <label class="field">Main caption
-        <input id="caption-input" type="text" value="SUNSET HEIST" maxlength="40" autocomplete="off">
+    <section class="rail-section">
+      <h2><span class="step">4</span> Words</h2>
+      <label class="field">Title
+        <input type="text" id="title-input" maxlength="30" autocomplete="off" spellcheck="false">
       </label>
       <label class="field">Tagline
-        <input id="tagline-input" type="text" value="LEONIDA" maxlength="30" autocomplete="off">
+        <input type="text" id="tagline-input" maxlength="60" autocomplete="off" spellcheck="false">
       </label>
-      <div id="color-choices" class="choices"></div>
-      <label class="slider-row">Size
-        <input id="caption-size" type="range" min="70" max="140" value="100">
-        <span id="caption-size-value">100%</span>
-      </label>
-      <label class="field">Position
-        <select id="caption-position">
-          <option value="bottom" selected>Bottom</option>
+      <div class="row two">
+        <label class="field">Stamp badge
+          <input type="text" id="stamp-input" maxlength="10" autocomplete="off" spellcheck="false">
+        </label>
+        <label class="field">Footer
+          <input type="text" id="footer-input" maxlength="30" autocomplete="off" spellcheck="false">
+        </label>
+      </div>
+      <label class="field">Title band
+        <select id="title-pos">
+          <option value="auto">Auto — darkest side of the photo</option>
+          <option value="bottom">Bottom</option>
           <option value="top">Top</option>
         </select>
       </label>
-      <label class="check"><input id="tilt-toggle" type="checkbox" checked> Slight tilt</label>
-      <label class="check"><input id="stamp-toggle" type="checkbox" checked> &ldquo;Vice City 2026&rdquo; stamp</label>
+      <p class="hint">The title lives in its own band, never over a face. Auto reads the photo and picks its darker side.</p>
     </section>
 
-    <section class="group export">
-      <h2>Export PNG</h2>
-      <div id="size-choices" class="size-choices"></div>
-      <button id="export-btn" type="button" class="btn primary big">Export PNG</button>
-      <p id="status" class="status" role="status">Ready.</p>
+    <section class="rail-section">
+      <h2><span class="step">5</span> Size &amp; export</h2>
+      <div id="size-pick" class="pick-grid" role="group" aria-label="Export size"></div>
+      <p class="hint">Export writes a full-size PNG to your downloads. Your photos never leave this machine.</p>
     </section>
   </aside>
 
-  <section class="stage" aria-label="Cover preview">
-    <canvas id="preview" width="720" height="720"></canvas>
-    <p class="stage-hint">Live preview &mdash; what you see is the PNG you get.</p>
-  </section>
-</main>
+  <main class="stage">
+    <div class="canvas-wrap">
+      <canvas id="stage-canvas" width="1100" height="619" aria-label="Live cover preview. Click a panel to select it, drag to reframe its photo."></canvas>
+    </div>
+    <div class="inspector">
+      <span id="panel-label">Panel 1 of 6</span>
+      <label class="zoom">Zoom
+        <input type="range" id="zoom-slider" min="100" max="300" step="5" value="100" aria-label="Zoom the selected panel photo">
+        <span id="zoom-label">1.0x</span>
+      </label>
+      <span class="hint">Click a panel to select it · drag to reframe · scroll to zoom · arrow keys nudge</span>
+    </div>
+    <p id="status-line" class="status" role="status">Loading the studio…</p>
+  </main>
+</div>
 
-<input id="file-input" type="file" accept="image/*" hidden>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>

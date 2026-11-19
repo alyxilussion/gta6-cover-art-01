@@ -1,48 +1,36 @@
-// Vice Cover Studio — the entry program (Node 22, standard library only).
+// Sunset Heat — entry program (Node 22, standard library only).
+// Hands the app in: copies app/ and screenshots/ from beside this file to
+// /output and writes /output/dossier.json, the summary the judge reads,
+// with the kit's vendored buildDossier library.
 //
-// The app itself is plain static files in app/ (index.html + ES modules,
-// OFL fonts, sample photos; no build step, no network request). This program
-// hands it in: it copies app/ and screenshots/ beside this file into the
-// output directory and writes /output/dossier.json with the vendored
-// make.fun library, which is the summary the judge reads.
-//
-// Run it locally with:
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-// In the grader MAKEFUN_OUTPUT_DIR is unset and /output is used.
-
-import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+// Outside the grader, MAKEFUN_OUTPUT_DIR stands in for /output.
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-app.ts';
 
-const repoRoot = fileURLToPath(new URL('.', import.meta.url));
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const here = fileURLToPath(new URL('.', import.meta.url));
+const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-// Clear the output directory's CONTENTS only — never the directory itself,
-// so a read-only parent or a mounted /output cannot break the run.
-function clearContents(dir: string): void {
-  mkdirSync(dir, { recursive: true });
-  for (const entry of readdirSync(dir)) {
-    rmSync(join(dir, entry), { recursive: true, force: true });
-  }
+mkdirSync(out, { recursive: true });
+// Clear only the *contents* of the output directory, never the directory
+// itself: the grader owns /output and removing it fails with EACCES.
+for (const name of ['app', 'screenshots', 'dossier.json']) {
+  const target = join(out, name);
+  if (existsSync(target)) rmSync(target, { recursive: true, force: true });
+}
+cpSync(join(here, 'app'), join(out, 'app'), { recursive: true });
+mkdirSync(join(out, 'screenshots'), { recursive: true });
+if (existsSync(join(here, 'screenshots'))) {
+  cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
 }
 
-function copyTree(from: string, to: string): void {
-  if (!existsSync(from)) return;
-  cpSync(from, to, { recursive: true });
-}
-
-clearContents(outDir);
-copyTree(join(repoRoot, 'app'), join(outDir, 'app'));
-copyTree(join(repoRoot, 'screenshots'), join(outDir, 'screenshots'));
-
-// The scorer's own caps (reference/gate.json): text_max_bytes shapes the
-// dossier text; the rest refuse an entry the scorer would refuse — at most
-// 4 screenshots, each at most 256 KiB; app/ at most 993 files and 48 MiB
-// in all, no path under app/ over 1000 bytes.
+// The gate's caps (reference/gate.json): only text_max_bytes shapes the
+// bytes; the others refuse an entry the scorer would refuse.
 writeFileSync(
-  join(outDir, 'dossier.json'),
-  buildDossier(outDir, {
+  join(out, 'dossier.json'),
+  buildDossier(out, {
     text_max_bytes: 163840,
     screenshots: { max: 4, max_bytes: 262144 },
     app_max_files: 993,

@@ -1,42 +1,66 @@
-// Dev-only static server for app/ (Node 22, stdlib only):
-//   node serve.ts [--port 8080]
-// Serves app/index.html and its files on localhost so the cover maker can
-// be tried in desktop Chrome with no build step. Not part of the entry.
-import { createServer } from 'node:http';
+// A tiny static server for local development (Node 22, standard library
+// only): `node serve.ts` serves app/ on http://localhost:8080, or another
+// port with --port <n>. It sends the MIME types an offline web app needs
+// and refuses any path outside app/. Development convenience only.
 import { createReadStream, statSync } from 'node:fs';
-import { extname, join, resolve } from 'node:path';
+import { createServer } from 'node:http';
+import { extname, join, normalize, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('./app', import.meta.url)));
-const portArg = process.argv.indexOf('--port');
-const port = portArg === -1 ? 8080 : Number(process.argv[portArg + 1]) || 8080;
+const args = process.argv.slice(2);
+const portFlag = args.indexOf('--port');
+const wanted = portFlag === -1 ? 8080 : Number(args[portFlag + 1]);
+const port = Number.isInteger(wanted) && wanted > 0 && wanted < 65536 ? wanted : 8080;
 
-const types = {
+const MIME = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
-  '.ttf': 'font/ttf',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
   '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
+  '.txt': 'text/plain; charset=utf-8',
 };
 
-createServer((req, res) => {
-  const path = decodeURIComponent(new URL(req.url ?? '/', 'http://localhost').pathname);
-  const file = resolve(join(root, path === '/' ? 'index.html' : `.${path}`));
-  if (!file.startsWith(root)) return res.writeHead(403).end('forbidden');
+createServer((request, response) => {
+  const url = new URL(request.url ?? '/', 'http://localhost');
+  let pathname;
+  try {
+    pathname = decodeURIComponent(url.pathname);
+  } catch {
+    response.writeHead(400).end('bad request');
+    return;
+  }
+  if (pathname.endsWith('/')) pathname += 'index.html';
+  const file = resolve(join(root, normalize(pathname)));
+  if (file !== root && !file.startsWith(root + sep)) {
+    response.writeHead(403).end('forbidden');
+    return;
+  }
   let size;
   try {
-    const st = statSync(file);
-    if (!st.isFile()) throw new Error('not a file');
-    size = st.size;
+    const stats = statSync(file);
+    if (!stats.isFile()) throw new Error('not a file');
+    size = stats.size;
   } catch {
-    return res.writeHead(404).end('not found');
+    response.writeHead(404).end('not found');
+    return;
   }
-  res.writeHead(200, {
-    'content-type': types[extname(file).toLowerCase()] ?? 'application/octet-stream',
+  response.writeHead(200, {
+    'content-type': MIME[extname(file).toLowerCase()] ?? 'application/octet-stream',
     'content-length': size,
+    'cache-control': 'no-store',
   });
-  createReadStream(file).pipe(res);
-}).listen(port, '127.0.0.1', () => console.log(`Vice Cover Studio on http://localhost:${port}`));
+  createReadStream(file).pipe(response);
+}).listen(port, '127.0.0.1', () => {
+  console.log(`Sunset Heat is on http://localhost:${port}`);
+});
